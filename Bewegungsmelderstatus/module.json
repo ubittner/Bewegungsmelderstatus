@@ -1,0 +1,14 @@
+{
+    "id": "{F36EE238-6594-3B70-F191-0E361DB0596C}",
+    "name": "Bewegungsmelderstatus",
+    "type": 3,
+    "vendor": "UB",
+    "aliases": [
+        "Bewegungsmelderstatus"
+    ],
+    "url": "https://github.com/ubittner/Bewegungsmelderstatus/tree/main/Bewegungsmelderstatus",
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "BWMS"
+}
