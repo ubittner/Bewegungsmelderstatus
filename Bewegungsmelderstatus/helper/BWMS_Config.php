@@ -195,7 +195,7 @@ trait BWMS_Config
                     $rowColor = '#C0C0FF'; //violett
                 }
                 if (!$variable['Use']) {
-                    $stateName = 'deaktiviert';
+                    $stateName = 'Deaktiviert';
                     $rowColor = '#DFDFDF'; //grey
                 }
             }
