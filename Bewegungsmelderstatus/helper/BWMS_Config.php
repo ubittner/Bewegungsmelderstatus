@@ -119,15 +119,15 @@ trait BWMS_Config
             ]
         ];
 
-        //Motion detector list
+        ##### Status designations
         $form['elements'][] = [
             'type'    => 'ExpansionPanel',
-            'caption' => 'Bewegungsmelderliste',
+            'caption' => 'Statusbezeichnungen',
             'items'   => [
                 [
-                    'type'    => 'CheckBox',
-                    'name'    => 'EnableIdle',
-                    'caption' => 'Untätig anzeigen'
+                    'type'    => 'Label',
+                    'caption' => 'Untätig',
+                    'bold'    => true
                 ],
                 [
                     'type'    => 'ValidationTextBox',
@@ -139,9 +139,9 @@ trait BWMS_Config
                     'caption' => ' '
                 ],
                 [
-                    'type'    => 'CheckBox',
-                    'name'    => 'EnableMotionDetected',
-                    'caption' => 'Bewegung erkannt anzeigen'
+                    'type'    => 'Label',
+                    'caption' => 'Bewegung erkannt',
+                    'bold'    => true
                 ],
                 [
                     'type'    => 'ValidationTextBox',
@@ -188,10 +188,10 @@ trait BWMS_Config
             $stateName = 'fehlerhaft';
             $rowColor = '#FFC0C0'; //red
             if ($conditions) {
-                $stateName = 'Untätig';
+                $stateName = $this->ReadPropertyString('IdleText');
                 $rowColor = '#C0FFC0'; //light green
                 if (IPS_IsConditionPassing($variable['PrimaryCondition']) && IPS_IsConditionPassing($variable['SecondaryCondition'])) {
-                    $stateName = 'Bewegung erkannt';
+                    $stateName = $this->ReadPropertyString('MotionDetectedText');
                     $rowColor = '#C0C0FF'; //violett
                 }
                 if (!$variable['Use']) {
@@ -335,6 +335,48 @@ trait BWMS_Config
                     ]
                 ]
             ];
+
+        //Motion detector list
+        $form['elements'][] = [
+            'type'    => 'ExpansionPanel',
+            'caption' => 'Bewegungsmelderliste',
+            'items'   => [
+                [
+                    'type'    => 'Label',
+                    'caption' => 'Anzeigeoption Bewegung erkannt',
+                    'bold'    => true
+                ],
+                [
+                    'type'    => 'CheckBox',
+                    'name'    => 'EnableMotionDetected',
+                    'caption' => 'Bewegung erkannt'
+                ],
+                [
+                    'type'    => 'ValidationTextBox',
+                    'name'    => 'SensorListMotionDetectedText',
+                    'caption' => 'Bezeichnung'
+                ],
+                [
+                    'type'    => 'Label',
+                    'caption' => ' '
+                ],
+                [
+                    'type'    => 'Label',
+                    'caption' => 'Anzeigeoption Untätig',
+                    'bold'    => true
+                ],
+                [
+                    'type'    => 'CheckBox',
+                    'name'    => 'EnableIdle',
+                    'caption' => 'Untätig anzeigen'
+                ],
+                [
+                    'type'    => 'ValidationTextBox',
+                    'name'    => 'SensorListIdleText',
+                    'caption' => 'Bezeichnung'
+                ]
+            ]
+        ];
 
         //Automatic status update
         $form['elements'][] = [

@@ -378,10 +378,10 @@ trait BWMS_MonitoredVariables
             }
             if ($id > 1 && @IPS_ObjectExists($id)) {
                 $actualStatus = 0; //0 = idle
-                $statusText = $this->ReadPropertyString('IdleText');
+                $statusText = $this->ReadPropertyString('SensorListIdleText');
                 if (IPS_IsConditionPassing($variable['PrimaryCondition']) && IPS_IsConditionPassing($variable['SecondaryCondition'])) {
                     $actualStatus = 1; //1 = motion detected
-                    $statusText = $this->ReadPropertyString('MotionDetectedText');
+                    $statusText = $this->ReadPropertyString('SensorListMotionDetectedText');
                 }
                 $result[] = [
                     'ID'           => $id,

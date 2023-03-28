@@ -24,7 +24,7 @@ class Bewegungsmelderstatus extends IPSModule
     //Constants
     private const MODULE_NAME = 'Bewegungsmelderstatus';
     private const MODULE_PREFIX = 'BWMS';
-    private const MODULE_VERSION = '1.0-1, 26.03.2023';
+    private const MODULE_VERSION = '1.0-2, 28.03.2023';
 
     public function Create()
     {
@@ -37,11 +37,17 @@ class Bewegungsmelderstatus extends IPSModule
         $this->RegisterPropertyString('Note', '');
 
         //Status
-        $this->RegisterPropertyString('IdleText', '🟢 Untätig');
-        $this->RegisterPropertyString('MotionDetectedText', '🔴 Bewegung erkannt');
+        $this->RegisterPropertyString('IdleText', 'Untätig');
+        $this->RegisterPropertyString('MotionDetectedText', 'Bewegung erkannt');
 
         //Trigger list
         $this->RegisterPropertyString('TriggerList', '[]');
+
+        //Motion detector list
+        $this->RegisterPropertyBoolean('EnableMotionDetected', true);
+        $this->RegisterPropertyString('SensorListMotionDetectedText', '🔴  Bewegung erkannt');
+        $this->RegisterPropertyBoolean('EnableIdle', true);
+        $this->RegisterPropertyString('SensorListIdleText', '🟢  Untätig');
 
         //Automatic status update
         $this->RegisterPropertyBoolean('AutomaticStatusUpdate', false);
@@ -52,8 +58,6 @@ class Bewegungsmelderstatus extends IPSModule
         $this->RegisterPropertyBoolean('EnableLastUpdate', true);
         $this->RegisterPropertyBoolean('EnableUpdateStatus', true);
         $this->RegisterPropertyBoolean('EnableSensorList', true);
-        $this->RegisterPropertyBoolean('EnableMotionDetected', true);
-        $this->RegisterPropertyBoolean('EnableIdle', true);
 
         ########## Variables
 
@@ -106,6 +110,14 @@ class Bewegungsmelderstatus extends IPSModule
         //Check runlevel
         if (IPS_GetKernelRunlevel() != KR_READY) {
             return;
+        }
+
+        //Update status profiles
+        $profile = self::MODULE_PREFIX . '.' . $this->InstanceID . '.Status';
+        if (IPS_VariableProfileExists($profile)) {
+            //Set new values
+            IPS_SetVariableProfileAssociation($profile, 0, $this->ReadPropertyString('IdleText'), 'Ok', 0x00FF00);
+            IPS_SetVariableProfileAssociation($profile, 1, $this->ReadPropertyString('MotionDetectedText'), 'Warning', 0xFF0000);
         }
 
         //Delete all references
