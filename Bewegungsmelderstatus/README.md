@@ -31,7 +31,7 @@ Dieses Modul zeigt den (Gesamt-)Status (untätig/Bewegung) von Bewegungsmeldern 
                       +-------------------------------+
                       | Bewegungsmelderstatus (Modul) |
                       |                               |
-Auslöser<-------------+ Status                        |
+Auslöser------------->+ Status                        |
                       +-------------------------------+
 ```
 
@@ -43,7 +43,7 @@ Das Modul Bewegungsmelderstatus reagiert auf verschiedene Auslöser.
 
 #### 5.1 Status aktualisieren
 
-```
+```text
 BWMS_UpdateStatus(integer INSTANCE_ID);
 ```
 
@@ -56,6 +56,8 @@ Konnte der jeweilige Befehl erfolgreich ausgeführt werden, liefert er als Ergeb
 | `INSTANCE_ID` | ID der Instanz |
 
 
-Beispiel:
-> BWMS_UpdateStatus(12345);
+**Beispiel:**
+```php
+BWMS_UpdateStatus(12345);
+```
 

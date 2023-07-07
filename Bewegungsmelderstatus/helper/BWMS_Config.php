@@ -9,6 +9,7 @@
  */
 
 /** @noinspection PhpUndefinedFunctionInspection */
+/** @noinspection DuplicatedCode */
 
 declare(strict_types=1);
 
@@ -22,6 +23,22 @@ trait BWMS_Config
     public function ReloadConfig(): void
     {
         $this->ReloadForm();
+    }
+
+    /**
+     * Expands or collapses the expansion panels.
+     *
+     * @param bool $State
+     * false =  collapse,
+     * true =   expand
+     *
+     * @return void
+     */
+    public function ExpandExpansionPanels(bool $State): void
+    {
+        for ($i = 1; $i <= 10; $i++) {
+            $this->UpdateFormField('Panel' . $i, 'expanded', $State);
+        }
     }
 
     /**
@@ -81,9 +98,35 @@ trait BWMS_Config
 
         ########## Elements
 
+        //Configuration buttons
+        $form['elements'][0] =
+            [
+                'type'  => 'RowLayout',
+                'items' => [
+                    [
+                        'type'    => 'Button',
+                        'caption' => 'Konfiguration ausklappen',
+                        'onClick' => self::MODULE_PREFIX . '_ExpandExpansionPanels($id, true);'
+                    ],
+                    [
+                        'type'    => 'Button',
+                        'caption' => 'Konfiguration einklappen',
+                        'onClick' => self::MODULE_PREFIX . '_ExpandExpansionPanels($id, false);'
+                    ],
+                    [
+                        'type'    => 'Button',
+                        'caption' => 'Konfiguration neu laden',
+                        'onClick' => self::MODULE_PREFIX . '_ReloadConfig($id);'
+                    ]
+                ]
+            ];
+
         //Info
-        $form['elements'][0] = [
+        $library = IPS_GetLibrary(self::LIBRARY_GUID);
+        $module = IPS_GetModule(self::MODULE_GUID);
+        $form['elements'][] = [
             'type'    => 'ExpansionPanel',
+            'name'    => 'Panel1',
             'caption' => 'Info',
             'items'   => [
                 [
@@ -93,18 +136,19 @@ trait BWMS_Config
                 ],
                 [
                     'type'    => 'Label',
-                    'name'    => 'ModuleDesignation',
-                    'caption' => "Modul:\t\t" . self::MODULE_NAME
+                    'caption' => "Modul:\t\t" . $module['ModuleName']
                 ],
                 [
                     'type'    => 'Label',
-                    'name'    => 'ModulePrefix',
-                    'caption' => "Präfix:\t\t" . self::MODULE_PREFIX
+                    'caption' => "Präfix:\t\t" . $module['Prefix']
                 ],
                 [
                     'type'    => 'Label',
-                    'name'    => 'ModuleVersion',
-                    'caption' => "Version:\t\t" . self::MODULE_VERSION
+                    'caption' => "Version:\t\t" . $library['Version'] . '-' . $library['Build'] . ', ' . date('d.m.Y', $library['Date'])
+                ],
+                [
+                    'type'    => 'Label',
+                    'caption' => "Entwickler:\t" . $library['Author']
                 ],
                 [
                     'type'    => 'Label',
@@ -119,34 +163,70 @@ trait BWMS_Config
             ]
         ];
 
-        ##### Status designations
+        //Status designations
         $form['elements'][] = [
             'type'    => 'ExpansionPanel',
+            'name'    => 'Panel2',
             'caption' => 'Statusbezeichnungen',
             'items'   => [
                 [
-                    'type'    => 'Label',
-                    'caption' => 'Untätig',
-                    'bold'    => true
+                    'type'    => 'ValidationTextBox',
+                    'name'    => 'MotionDetectedText',
+                    'caption' => 'Bezeichnung für Bewegung erkannt'
                 ],
                 [
                     'type'    => 'ValidationTextBox',
                     'name'    => 'IdleText',
-                    'caption' => 'Bezeichnung'
+                    'caption' => 'Bezeichnung für Untätig'
+                ]
+            ]
+        ];
+
+        //Motion detector list
+        $form['elements'][] = [
+            'type'    => 'ExpansionPanel',
+            'name'    => 'Panel3',
+            'caption' => 'Listenoptionen',
+            'items'   => [
+                [
+                    'type'  => 'RowLayout',
+                    'items' => [
+                        [
+                            'type'    => 'CheckBox',
+                            'name'    => 'EnableMotionDetected',
+                            'caption' => 'Bewegung erkannt anzeigen'
+                        ],
+                        [
+                            'type'    => 'Label',
+                            'caption' => ' ',
+                            'width'   => '20px'
+                        ],
+                        [
+                            'type'    => 'ValidationTextBox',
+                            'name'    => 'SensorListMotionDetectedText',
+                            'caption' => 'Bezeichnung für Bewegung erkannt'
+                        ]
+                    ]
                 ],
                 [
-                    'type'    => 'Label',
-                    'caption' => ' '
-                ],
-                [
-                    'type'    => 'Label',
-                    'caption' => 'Bewegung erkannt',
-                    'bold'    => true
-                ],
-                [
-                    'type'    => 'ValidationTextBox',
-                    'name'    => 'MotionDetectedText',
-                    'caption' => 'Bezeichnung'
+                    'type'  => 'RowLayout',
+                    'items' => [
+                        [
+                            'type'    => 'CheckBox',
+                            'name'    => 'EnableIdle',
+                            'caption' => 'Untätig anzeigen'
+                        ],
+                        [
+                            'type'    => 'Label',
+                            'caption' => ' ',
+                            'width'   => '90px'
+                        ],
+                        [
+                            'type'    => 'ValidationTextBox',
+                            'name'    => 'SensorListIdleText',
+                            'caption' => 'Bezeichnung für Untätig'
+                        ]
+                    ]
                 ]
             ]
         ];
@@ -205,12 +285,14 @@ trait BWMS_Config
         $form['elements'][] =
             [
                 'type'    => 'ExpansionPanel',
-                'caption' => 'Auslöser',
+                'name'    => 'Panel4',
+                'caption' => 'Bewegungsmelder',
                 'items'   => [
                     [
                         'type'     => 'List',
                         'name'     => 'TriggerList',
-                        'rowCount' => 15,
+                        'caption'  => 'Bewegungsmelder',
+                        'rowCount' => 10,
                         'add'      => true,
                         'delete'   => true,
                         'sort'     => [
@@ -336,51 +418,10 @@ trait BWMS_Config
                 ]
             ];
 
-        //Motion detector list
-        $form['elements'][] = [
-            'type'    => 'ExpansionPanel',
-            'caption' => 'Bewegungsmelderliste',
-            'items'   => [
-                [
-                    'type'    => 'Label',
-                    'caption' => 'Anzeigeoption Bewegung erkannt',
-                    'bold'    => true
-                ],
-                [
-                    'type'    => 'CheckBox',
-                    'name'    => 'EnableMotionDetected',
-                    'caption' => 'Bewegung erkannt'
-                ],
-                [
-                    'type'    => 'ValidationTextBox',
-                    'name'    => 'SensorListMotionDetectedText',
-                    'caption' => 'Bezeichnung'
-                ],
-                [
-                    'type'    => 'Label',
-                    'caption' => ' '
-                ],
-                [
-                    'type'    => 'Label',
-                    'caption' => 'Anzeigeoption Untätig',
-                    'bold'    => true
-                ],
-                [
-                    'type'    => 'CheckBox',
-                    'name'    => 'EnableIdle',
-                    'caption' => 'Untätig anzeigen'
-                ],
-                [
-                    'type'    => 'ValidationTextBox',
-                    'name'    => 'SensorListIdleText',
-                    'caption' => 'Bezeichnung'
-                ]
-            ]
-        ];
-
         //Automatic status update
         $form['elements'][] = [
             'type'    => 'ExpansionPanel',
+            'name'    => 'Panel5',
             'caption' => 'Aktualisierung',
             'items'   => [
                 [
@@ -400,19 +441,9 @@ trait BWMS_Config
         //Visualisation
         $form['elements'][] = [
             'type'    => 'ExpansionPanel',
+            'name'    => 'Panel6',
             'caption' => 'Visualisierung',
             'items'   => [
-                [
-                    'type'    => 'Label',
-                    'caption' => 'WebFront',
-                    'bold'    => true,
-                    'italic'  => true
-                ],
-                [
-                    'type'    => 'Label',
-                    'caption' => 'Anzeigeoptionen',
-                    'italic'  => true
-                ],
                 [
                     'type'    => 'CheckBox',
                     'name'    => 'EnableStatus',
@@ -438,28 +469,133 @@ trait BWMS_Config
 
         ########## Actions
 
-        $form['actions'][0] = [
-            'type'    => 'ExpansionPanel',
-            'caption' => 'Konfiguration',
-            'items'   => [
-                [
-                    'type'    => 'Button',
-                    'caption' => 'Neu laden',
-                    'onClick' => self::MODULE_PREFIX . '_ReloadConfig($id);'
-                ]
-            ]
-        ];
+        $form['actions'][] =
+            [
+                'type'    => 'Label',
+                'caption' => 'Bewegungsmelder'
+            ];
 
-        //Test center
-        $form['actions'][] = [
-            'type'    => 'ExpansionPanel',
-            'caption' => 'Schaltfunktionen',
-            'items'   => [
-                [
-                    'type' => 'TestCenter',
+        $form['actions'][] =
+            [
+                'type'  => 'RowLayout',
+                'items' => [
+                    [
+                        'type'    => 'Select',
+                        'name'    => 'MotionDetectorDeterminationType',
+                        'caption' => 'Ident / Profil',
+                        'options' => [
+                            [
+                                'caption' => 'Benutzerdefinierter Ident',
+                                'value'   => 0
+                            ],
+                            [
+                                'caption' => 'Ident: MOTION',
+                                'value'   => 1
+                            ],
+                            [
+                                'caption' => 'Benutzerdefiniertes Profil',
+                                'value'   => 2
+                            ],
+                            [
+                                'caption' => 'Profil: ~Motion',
+                                'value'   => 3
+                            ],
+                            [
+                                'caption' => 'Profil: ~Motion.Reversed',
+                                'value'   => 4
+                            ],
+                            [
+                                'caption' => 'Profil: ~Motion.HM',
+                                'value'   => 5
+                            ],
+                        ],
+                        'value'    => 0,
+                        'onChange' => self::MODULE_PREFIX . '_CheckMotionDetectorDeterminationValue($id, $MotionDetectorDeterminationType);'
+                    ],
+                    [
+                        'type'    => 'ValidationTextBox',
+                        'name'    => 'MotionDetectorDeterminationValue',
+                        'caption' => 'Identifikator',
+                        'visible' => true
+                    ],
+                    [
+                        'type'    => 'PopupButton',
+                        'caption' => 'Bewegungsmelder ermitteln',
+                        'popup'   => [
+                            'caption' => 'Variablen wirklich automatisch ermitteln und hinzufügen?',
+                            'items'   => [
+                                [
+                                    'type'    => 'Button',
+                                    'caption' => 'Ermitteln',
+                                    'onClick' => self::MODULE_PREFIX . '_DetermineMotionDetectorVariables($id, $MotionDetectorDeterminationType, $MotionDetectorDeterminationValue);'
+                                ],
+                                [
+                                    'type'    => 'ProgressBar',
+                                    'name'    => 'MotionDetectorProgress',
+                                    'caption' => 'Fortschritt',
+                                    'minimum' => 0,
+                                    'maximum' => 100,
+                                    'visible' => false
+                                ],
+                                [
+                                    'type'    => 'Label',
+                                    'name'    => 'MotionDetectorProgressInfo',
+                                    'caption' => '',
+                                    'visible' => false
+                                ]
+                            ]
+                        ]
+                    ],
+
+                    [
+                        'type'    => 'PopupButton',
+                        'caption' => 'Variablenprofil zuweisen',
+                        'popup'   => [
+                            'caption' => 'Variablenprofil wirklich automatisch zuweisen?',
+                            'items'   => [
+                                [
+                                    'type'    => 'Button',
+                                    'caption' => 'Zuweisen',
+                                    'onClick' => self::MODULE_PREFIX . '_AssignMotionDetectorVariableProfile($id);'
+                                ],
+                                [
+                                    'type'    => 'ProgressBar',
+                                    'name'    => 'AssignMotionDetectorVariableProfileProgress',
+                                    'caption' => 'Fortschritt',
+                                    'minimum' => 0,
+                                    'maximum' => 100,
+                                    'visible' => false
+                                ],
+                                [
+                                    'type'    => 'Label',
+                                    'name'    => 'AssignMotionDetectorVariableProfileProgressInfo',
+                                    'caption' => '',
+                                    'visible' => false
+                                ]
+                            ]
+                        ]
+                    ],
                 ]
-            ]
-        ];
+            ];
+
+        $form['actions'][] =
+            [
+                'type'    => 'Label',
+                'caption' => ' '
+            ];
+
+        $form['actions'][] =
+            [
+                'type'    => 'Button',
+                'caption' => 'Status aktualisieren',
+                'onClick' => self::MODULE_PREFIX . '_UpdateStatus($id);' . self::MODULE_PREFIX . '_UIShowMessage($id, "Status wurde aktualisiert!");'
+            ];
+
+        $form['actions'][] =
+            [
+                'type'    => 'Label',
+                'caption' => ' '
+            ];
 
         //Registered references
         $registeredReferences = [];
@@ -476,44 +612,6 @@ trait BWMS_Config
                 'Name'     => $name,
                 'rowColor' => $rowColor];
         }
-
-        $form['actions'][] = [
-            'type'    => 'ExpansionPanel',
-            'caption' => 'Registrierte Referenzen',
-            'items'   => [
-                [
-                    'type'     => 'List',
-                    'name'     => 'RegisteredReferences',
-                    'rowCount' => 10,
-                    'sort'     => [
-                        'column'    => 'ObjectID',
-                        'direction' => 'ascending'
-                    ],
-                    'columns' => [
-                        [
-                            'caption' => 'ID',
-                            'name'    => 'ObjectID',
-                            'width'   => '150px',
-                            'onClick' => self::MODULE_PREFIX . '_ModifyButton($id, "RegisteredReferencesConfigurationButton", "ID " . $RegisteredReferences["ObjectID"] . " aufrufen", $RegisteredReferences["ObjectID"]);'
-                        ],
-                        [
-                            'caption' => 'Name',
-                            'name'    => 'Name',
-                            'width'   => '300px',
-                            'onClick' => self::MODULE_PREFIX . '_ModifyButton($id, "RegisteredReferencesConfigurationButton", "ID " . $RegisteredReferences["ObjectID"] . " aufrufen", $RegisteredReferences["ObjectID"]);'
-                        ]
-                    ],
-                    'values' => $registeredReferences
-                ],
-                [
-                    'type'     => 'OpenObjectButton',
-                    'name'     => 'RegisteredReferencesConfigurationButton',
-                    'caption'  => 'Aufrufen',
-                    'visible'  => false,
-                    'objectID' => 0
-                ]
-            ]
-        ];
 
         //Registered messages
         $registeredMessages = [];
@@ -545,13 +643,94 @@ trait BWMS_Config
                 'rowColor'           => $rowColor];
         }
 
+        //Developer area
         $form['actions'][] = [
             'type'    => 'ExpansionPanel',
-            'caption' => 'Registrierte Nachrichten',
+            'caption' => 'Entwicklerbereich',
             'items'   => [
+                [
+                    'type'  => 'RowLayout',
+                    'items' => [
+                        [
+                            'type'    => 'SelectCategory',
+                            'name'    => 'LinkCategory',
+                            'caption' => 'Kategorie',
+                            'width'   => '610px'
+                        ],
+                        [
+                            'type'    => 'PopupButton',
+                            'caption' => 'Verknüpfung erstellen',
+                            'popup'   => [
+                                'caption' => 'Variablenverknüpfungen wirklich erstellen?',
+                                'items'   => [
+                                    [
+                                        'type'    => 'Button',
+                                        'caption' => 'Erstellen',
+                                        'onClick' => self::MODULE_PREFIX . '_CreateVariableLinks($id, $LinkCategory);'
+                                    ],
+                                    [
+                                        'type'    => 'ProgressBar',
+                                        'name'    => 'VariableLinkProgress',
+                                        'caption' => 'Fortschritt',
+                                        'minimum' => 0,
+                                        'maximum' => 100,
+                                        'visible' => false
+                                    ],
+                                    [
+                                        'type'    => 'Label',
+                                        'name'    => 'VariableLinkProgressInfo',
+                                        'caption' => '',
+                                        'visible' => false
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    'type'    => 'Label',
+                    'caption' => ' '
+                ],
+                [
+                    'type'     => 'List',
+                    'name'     => 'RegisteredReferences',
+                    'caption'  => 'Registrierte Referenzen',
+                    'rowCount' => 10,
+                    'sort'     => [
+                        'column'    => 'ObjectID',
+                        'direction' => 'ascending'
+                    ],
+                    'columns' => [
+                        [
+                            'caption' => 'ID',
+                            'name'    => 'ObjectID',
+                            'width'   => '150px',
+                            'onClick' => self::MODULE_PREFIX . '_ModifyButton($id, "RegisteredReferencesConfigurationButton", "ID " . $RegisteredReferences["ObjectID"] . " aufrufen", $RegisteredReferences["ObjectID"]);'
+                        ],
+                        [
+                            'caption' => 'Name',
+                            'name'    => 'Name',
+                            'width'   => '300px',
+                            'onClick' => self::MODULE_PREFIX . '_ModifyButton($id, "RegisteredReferencesConfigurationButton", "ID " . $RegisteredReferences["ObjectID"] . " aufrufen", $RegisteredReferences["ObjectID"]);'
+                        ]
+                    ],
+                    'values' => $registeredReferences
+                ],
+                [
+                    'type'     => 'OpenObjectButton',
+                    'name'     => 'RegisteredReferencesConfigurationButton',
+                    'caption'  => 'Aufrufen',
+                    'visible'  => false,
+                    'objectID' => 0
+                ],
+                [
+                    'type'    => 'Label',
+                    'caption' => ' '
+                ],
                 [
                     'type'     => 'List',
                     'name'     => 'RegisteredMessages',
+                    'caption'  => 'Registrierte Nachrichten',
                     'rowCount' => 10,
                     'sort'     => [
                         'column'    => 'ObjectID',
@@ -593,110 +772,46 @@ trait BWMS_Config
             ]
         ];
 
-        //Trigger
-        $form['actions'][] = [
-            'type'    => 'ExpansionPanel',
-            'caption' => 'Auslöser',
-            'items'   => [
-                [
-                    'type'    => 'Label',
-                    'caption' => 'Auslöser',
-                    'italic'  => true,
-                    'bold'    => true
-                ],
-                [
-                    'type'  => 'RowLayout',
-                    'items' => [
-                        [
-                            'type'    => 'ValidationTextBox',
-                            'name'    => 'ObjectIdents',
-                            'caption' => 'Identifikator',
-                            'width'   => '600px',
-                            'value'   => 'MOTION'
-                        ],
+        //Dummy info message
+        $form['actions'][] =
+            [
+                'type'    => 'PopupAlert',
+                'name'    => 'InfoMessage',
+                'visible' => false,
+                'popup'   => [
+                    'closeCaption' => 'OK',
+                    'items'        => [
                         [
                             'type'    => 'Label',
-                            'caption' => ' '
-                        ],
-                        [
-                            'type'    => 'PopupButton',
-                            'caption' => 'Ermitteln',
-                            'popup'   => [
-                                'caption' => 'Variablen wirklich automatisch ermitteln und hinzufügen?',
-                                'items'   => [
-                                    [
-                                        'type'    => 'Button',
-                                        'caption' => 'Ermitteln',
-                                        'onClick' => self::MODULE_PREFIX . '_DetermineTriggerVariables($id, $ObjectIdents);'
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ],
-                [
-                    'type'    => 'Label',
-                    'caption' => ' '
-                ],
-                [
-                    'type'    => 'Label',
-                    'caption' => 'Verknüpfungen',
-                    'italic'  => true,
-                    'bold'    => true
-                ],
-                [
-                    'type'  => 'RowLayout',
-                    'items' => [
-                        [
-                            'type'    => 'SelectCategory',
-                            'name'    => 'LinkCategory',
-                            'caption' => 'Kategorie',
-                            'width'   => '600px'
-                        ],
-                        [
-                            'type'    => 'Label',
-                            'caption' => ' '
-                        ],
-                        [
-                            'type'    => 'PopupButton',
-                            'caption' => 'Erstellen',
-                            'popup'   => [
-                                'caption' => 'Variablenverknüpfungen wirklich erstellen?',
-                                'items'   => [
-                                    [
-                                        'type'    => 'Button',
-                                        'caption' => 'Erstellen',
-                                        'onClick' => self::MODULE_PREFIX . '_CreateVariableLinks($id, $LinkCategory);'
-                                    ]
-                                ]
-                            ]
+                            'name'    => 'InfoMessageLabel',
+                            'caption' => '',
+                            'visible' => true
                         ]
                     ]
                 ]
-            ]
-        ];
+            ];
 
         ########## Status
 
         $form['status'][] = [
             'code'    => 101,
             'icon'    => 'active',
-            'caption' => self::MODULE_NAME . ' wird erstellt',
+            'caption' => $module['ModuleName'] . ' wird erstellt',
         ];
         $form['status'][] = [
             'code'    => 102,
             'icon'    => 'active',
-            'caption' => self::MODULE_NAME . ' ist aktiv',
+            'caption' => $module['ModuleName'] . ' ist aktiv',
         ];
         $form['status'][] = [
             'code'    => 103,
             'icon'    => 'active',
-            'caption' => self::MODULE_NAME . ' wird gelöscht',
+            'caption' => $module['ModuleName'] . ' wird gelöscht',
         ];
         $form['status'][] = [
             'code'    => 104,
             'icon'    => 'inactive',
-            'caption' => self::MODULE_NAME . ' ist inaktiv',
+            'caption' => $module['ModuleName'] . ' ist inaktiv',
         ];
         $form['status'][] = [
             'code'    => 200,
