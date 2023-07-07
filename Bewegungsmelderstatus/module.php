@@ -22,9 +22,9 @@ class Bewegungsmelderstatus extends IPSModule
     use BWMS_MonitoredVariables;
 
     //Constants
-    private const MODULE_NAME = 'Bewegungsmelderstatus';
+    private const LIBRARY_GUID = '{8F305D5E-2380-3326-073D-0EAC7A47184C}';
+    private const MODULE_GUID = '{F36EE238-6594-3B70-F191-0E361DB0596C}';
     private const MODULE_PREFIX = 'BWMS';
-    private const MODULE_VERSION = '1.0-2, 28.03.2023';
 
     public function Create()
     {
@@ -97,6 +97,10 @@ class Bewegungsmelderstatus extends IPSModule
 
         //Status update
         $this->RegisterTimer('StatusUpdate', 0, self::MODULE_PREFIX . '_UpdateStatus(' . $this->InstanceID . ');');
+
+        ########## General variable profiles
+
+        $this->CreateMotionDetectorVariableProfiles();
     }
 
     public function ApplyChanges()
@@ -222,6 +226,12 @@ class Bewegungsmelderstatus extends IPSModule
                 break;
 
         }
+    }
+
+    public function UIShowMessage(string $Message): void
+    {
+        $this->UpdateFormField('InfoMessage', 'visible', true);
+        $this->UpdateFormField('InfoMessageLabel', 'caption', $Message);
     }
 
     #################### Request action
