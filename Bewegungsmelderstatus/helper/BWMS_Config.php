@@ -485,38 +485,48 @@ trait BWMS_Config
                         'caption' => 'Ident / Profil',
                         'options' => [
                             [
-                                'caption' => 'Benutzerdefinierter Ident',
+                                'caption' => 'Profil auswählen',
                                 'value'   => 0
                             ],
                             [
-                                'caption' => 'Ident: MOTION',
+                                'caption' => 'Profil: ~Motion',
                                 'value'   => 1
                             ],
                             [
-                                'caption' => 'Benutzerdefiniertes Profil',
+                                'caption' => 'Profil: ~Motion.Reversed',
                                 'value'   => 2
                             ],
                             [
-                                'caption' => 'Profil: ~Motion',
+                                'caption' => 'Profil: ~Motion.HM',
                                 'value'   => 3
                             ],
                             [
-                                'caption' => 'Profil: ~Motion.Reversed',
+                                'caption' => 'Benutzerdefiniertes Profil',
                                 'value'   => 4
                             ],
                             [
-                                'caption' => 'Profil: ~Motion.HM',
+                                'caption' => 'Ident: MOTION',
                                 'value'   => 5
                             ],
+                            [
+                                'caption' => 'Benutzerdefinierter Ident',
+                                'value'   => 6
+                            ]
                         ],
                         'value'    => 0,
                         'onChange' => self::MODULE_PREFIX . '_CheckMotionDetectorDeterminationValue($id, $MotionDetectorDeterminationType);'
                     ],
                     [
+                        'type'    => 'SelectProfile',
+                        'name'    => 'ProfileSelection',
+                        'caption' => 'Profil',
+                        'visible' => true
+                    ],
+                    [
                         'type'    => 'ValidationTextBox',
                         'name'    => 'MotionDetectorDeterminationValue',
                         'caption' => 'Identifikator',
-                        'visible' => true
+                        'visible' => false
                     ],
                     [
                         'type'    => 'PopupButton',
@@ -527,7 +537,7 @@ trait BWMS_Config
                                 [
                                     'type'    => 'Button',
                                     'caption' => 'Ermitteln',
-                                    'onClick' => self::MODULE_PREFIX . '_DetermineMotionDetectorVariables($id, $MotionDetectorDeterminationType, $MotionDetectorDeterminationValue);'
+                                    'onClick' => self::MODULE_PREFIX . '_DetermineMotionDetectorVariables($id, $MotionDetectorDeterminationType, $MotionDetectorDeterminationValue, $ProfileSelection);'
                                 ],
                                 [
                                     'type'    => 'ProgressBar',
@@ -546,7 +556,6 @@ trait BWMS_Config
                             ]
                         ]
                     ],
-
                     [
                         'type'    => 'PopupButton',
                         'caption' => 'Variablenprofil zuweisen',
@@ -574,7 +583,7 @@ trait BWMS_Config
                                 ]
                             ]
                         ]
-                    ],
+                    ]
                 ]
             ];
 

@@ -16,15 +16,41 @@ declare(strict_types=1);
 
 trait BWMS_MonitoredVariables
 {
+    public function CheckMotionDetectorDeterminationValue(int $MotionDetectorDeterminationType): void
+    {
+        $profileSelection = false;
+        $determinationValue = false;
+
+        //Profile selection
+        if ($MotionDetectorDeterminationType == 0) {
+            $profileSelection = true;
+        }
+
+        //Custom profile
+        if ($MotionDetectorDeterminationType == 4) {
+            $this->UpdateFormfield('VariableDeterminationValue', 'caption', 'Profilname');
+            $determinationValue = true;
+        }
+        //Custom ident
+        if ($MotionDetectorDeterminationType == 6) {
+            $this->UpdateFormfield('VariableDeterminationValue', 'caption', 'Identifikator');
+            $determinationValue = true;
+        }
+
+        $this->UpdateFormfield('ProfileSelection', 'visible', $profileSelection);
+        $this->UpdateFormfield('MotionDetectorDeterminationValue', 'visible', $determinationValue);
+    }
+
     /**
      * Determines automatically the variables of all existing motion detectors.
      *
      * @param int $DeterminationType
      * @param string $DeterminationValue
+     * @param string $ProfileSelection
      * @return void
      * @throws Exception
      */
-    public function DetermineMotionDetectorVariables(int $DeterminationType, string $DeterminationValue): void
+    public function DetermineMotionDetectorVariables(int $DeterminationType, string $DeterminationValue, string $ProfileSelection = ''): void
     {
         $this->SendDebug(__FUNCTION__, 'wird ausgeführt', 0);
         $this->SendDebug(__FUNCTION__, 'Auswahl: ' . $DeterminationType, 0);
@@ -42,22 +68,14 @@ trait BWMS_MonitoredVariables
         $passedVariables = 0;
         foreach (@IPS_GetVariableList() as $variable) {
             switch ($DeterminationType) {
-                case 0: //Custom Ident
-                    if ($DeterminationValue == '') {
-                        $infoText = 'Abbruch, es wurde kein Identifikator angegeben!';
-                        $this->UpdateFormField('InfoMessage', 'visible', true);
-                        $this->UpdateFormField('InfoMessageLabel', 'caption', $infoText);
-                        return;
-                    } else {
-                        $determineIdent = true;
-                    }
+                case 0: //Profile: select profile
+                case 1: //Profile: ~Motion
+                case 2: //Profile: ~Motion.Reversed
+                case 3: //Profile: ~Motion.HM
+                    $determineProfile = true;
                     break;
 
-                case 1: //Ident: MOTION
-                    $determineIdent = true;
-                    break;
-
-                case 2: //Custom Profile
+                case 4: //Custom Profile
                     if ($DeterminationValue == '') {
                         $infoText = 'Abbruch, es wurde kein Profilname angegeben!';
                         $this->UpdateFormField('InfoMessage', 'visible', true);
@@ -68,10 +86,19 @@ trait BWMS_MonitoredVariables
                     }
                     break;
 
-                case 3: //Profile: ~Motion
-                case 4: //Profile: ~Motion.Reversed
-                case 5: //Profile: ~Motion.HM
-                    $determineProfile = true;
+                case 5: //Ident: MOTION
+                    $determineIdent = true;
+                    break;
+
+                case 6: //Custom Ident
+                    if ($DeterminationValue == '') {
+                        $infoText = 'Abbruch, es wurde kein Identifikator angegeben!';
+                        $this->UpdateFormField('InfoMessage', 'visible', true);
+                        $this->UpdateFormField('InfoMessageLabel', 'caption', $infoText);
+                        return;
+                    } else {
+                        $determineIdent = true;
+                    }
                     break;
             }
 
@@ -82,26 +109,38 @@ trait BWMS_MonitoredVariables
             $this->UpdateFormField('MotionDetectorProgressInfo', 'caption', $passedVariables . '/' . $maximumVariables);
             IPS_Sleep(25);
 
-            ##### Ident
+            ##### Profile
 
-            //Determine via ident
-            if ($determineIdent && !$determineProfile) {
+            //Determine via profile
+            if ($determineProfile && !$determineIdent) {
                 switch ($DeterminationType) {
-                    case 0: //Custom ident
-                        $objectIdents = $DeterminationValue;
+                    case 0: //Select profile
+                        $profileNames = $ProfileSelection;
                         break;
 
-                    case 1: //Ident: MOTION
-                        $objectIdents = 'MOTION';
+                    case 1:
+                        $profileNames = '~Motion';
+                        break;
+
+                    case 2:
+                        $profileNames = '~Motion.Reversed';
+                        break;
+
+                    case 3:
+                        $profileNames = '~Motion.HM';
+                        break;
+
+                    case 4: //Custom profile
+                        $profileNames = $DeterminationValue;
                         break;
 
                 }
-                if (isset($objectIdents)) {
-                    $objectIdents = str_replace(' ', '', $objectIdents);
-                    $objectIdents = explode(',', $objectIdents);
-                    foreach ($objectIdents as $objectIdent) {
-                        $object = @IPS_GetObject($variable);
-                        if ($object['ObjectIdent'] == $objectIdent) {
+                if (isset($profileNames)) {
+                    $profileNames = str_replace(' ', '', $profileNames);
+                    $profileNames = explode(',', $profileNames);
+                    foreach ($profileNames as $profileName) {
+                        $variableData = IPS_GetVariable($variable);
+                        if ($variableData['VariableCustomProfile'] == $profileName || $variableData['VariableProfile'] == $profileName) {
                             $name = @IPS_GetName($variable);
                             $address = '';
                             $parent = @IPS_GetParent($variable);
@@ -152,34 +191,26 @@ trait BWMS_MonitoredVariables
                 }
             }
 
-            ##### Profile
+            ##### Ident
 
-            //Determine via profile
-            if ($determineProfile && !$determineIdent) {
+            //Determine via ident
+            if ($determineIdent && !$determineProfile) {
                 switch ($DeterminationType) {
-                    case 2: //Custom ident
-                        $profileNames = $DeterminationValue;
-                        break;
-
-                    case 3:
-                        $profileNames = '~Motion';
-                        break;
-
-                    case 4:
-                        $profileNames = '~Motion.Reversed';
-                        break;
-
                     case 5:
-                        $profileNames = '~Motion.HM';
+                        $objectIdents = 'MOTION';
+                        break;
+
+                    case 6: //Custom ident
+                        $objectIdents = $DeterminationValue;
                         break;
 
                 }
-                if (isset($profileNames)) {
-                    $profileNames = str_replace(' ', '', $profileNames);
-                    $profileNames = explode(',', $profileNames);
-                    foreach ($profileNames as $profileName) {
-                        $variableData = IPS_GetVariable($variable);
-                        if ($variableData['VariableCustomProfile'] == $profileName || $variableData['VariableProfile'] == $profileName) {
+                if (isset($objectIdents)) {
+                    $objectIdents = str_replace(' ', '', $objectIdents);
+                    $objectIdents = explode(',', $objectIdents);
+                    foreach ($objectIdents as $objectIdent) {
+                        $object = @IPS_GetObject($variable);
+                        if ($object['ObjectIdent'] == $objectIdent) {
                             $name = @IPS_GetName($variable);
                             $address = '';
                             $parent = @IPS_GetParent($variable);
@@ -284,20 +315,6 @@ trait BWMS_MonitoredVariables
         if (@IPS_HasChanges($this->InstanceID)) {
             @IPS_ApplyChanges($this->InstanceID);
         }
-    }
-
-    public function CheckMotionDetectorDeterminationValue(int $MotionDetectorDeterminationType): void
-    {
-        $visible = false;
-        if ($MotionDetectorDeterminationType == 0) {
-            $this->UpdateFormfield('MotionDetectorDeterminationValue', 'caption', 'Identifikator');
-            $visible = true;
-        }
-        if ($MotionDetectorDeterminationType == 2) {
-            $this->UpdateFormfield('MotionDetectorDeterminationValue', 'caption', 'Profilname');
-            $visible = true;
-        }
-        $this->UpdateFormfield('MotionDetectorDeterminationValue', 'visible', $visible);
     }
 
     public function AssignMotionDetectorVariableProfile(): void
