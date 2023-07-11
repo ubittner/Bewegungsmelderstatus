@@ -501,7 +501,7 @@ trait BWMS_Config
                                 'value'   => 3
                             ],
                             [
-                                'caption' => 'Benutzerdefiniertes Profil',
+                                'caption' => 'Profil: Benutzerdefiniert',
                                 'value'   => 4
                             ],
                             [
@@ -509,7 +509,7 @@ trait BWMS_Config
                                 'value'   => 5
                             ],
                             [
-                                'caption' => 'Benutzerdefinierter Ident',
+                                'caption' => 'Ident: Benutzerdefiniert',
                                 'value'   => 6
                             ]
                         ],
